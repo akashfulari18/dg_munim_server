@@ -145,6 +145,6 @@ AdminRoute.delete("/inactive_user/:id",authMiddleware,checkRole(['admin']),async
  }
 })
 
-a
+
 
 module.exports=AdminRoute
