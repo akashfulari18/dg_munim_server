@@ -1,12 +1,12 @@
 const mongoose = require('mongoose')
 
 const fromShetkariSchema=mongoose.Schema({
-    market_feechi_rakkam: Number,
-        market_nirikshan_kharch: Number,
-        levi: Number,
-        adat: Number,
-        cgst: Number,
-        sgst: Number,
+    hamali: Number,
+        tolai: Number,
+        kata: Number,
+        varfer: Number,
+        pakhadani: Number,
+        prat_fee: Number,
 })
 
 const FromShetkariModel = mongoose.model('fromshetkari',fromShetkariSchema)

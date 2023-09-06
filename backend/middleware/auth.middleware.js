@@ -4,7 +4,7 @@ const { BlacklistModel } = require('../model/blacklist.model');
 require('dotenv').config();
 
 const authMiddleware = async (req, res, next) => {
-  const accessToken = req.headers.authorization.split(' ')[1] || ""
+  const accessToken = req?.headers?.authorization.split(' ')[1] || ""
 
   try {
     if (accessToken==="") {

@@ -6,6 +6,10 @@ const AdminModel = require('../model/AdminModel')
 const UserModel = require('../model/user.model')
 const authMiddleware = require('../middleware/auth.middleware')
 const { checkRole } = require('../middleware/checkRole.middleware')
+const FromKharidiModel = require('../model/fromKharidi.model')
+const FromShetkariModel = require('../model/fromShetkari.model')
+const MarketModel = require('../model/market.model')
+const { generatePassword } = require('../utils')
 
 const AdminRoute = express.Router()
 
@@ -38,12 +42,11 @@ AdminRoute.post("/signup",async(req,res)=>{
 
 AdminRoute.post("/add_user",authMiddleware,checkRole(['admin']),async(req,res)=>{
 
-    const {role,email,password} = req.body
+    const {role,email,password,username} = req.body
 
-    try {
-        
-       
-            
+    const {plainPassword, hashedPassword} = await generatePassword(username)
+//    console.log(plainPassword,hashedPassword)
+    try {  
             const user = await UserModel.find({email})
 
             if(user.length>0){
@@ -53,7 +56,7 @@ AdminRoute.post("/add_user",authMiddleware,checkRole(['admin']),async(req,res)=>
                 // console.log(hashedPass)
                 
                 const newUser =  new UserModel({...req.body,password:hashedPass})
-                await newUser.save()
+                // await newUser.save()
                 res.status(200).send({msg:"user added successfully..."})
 
             }
@@ -145,6 +148,70 @@ AdminRoute.delete("/inactive_user/:id",authMiddleware,checkRole(['admin']),async
  }
 })
 
+AdminRoute.post('/add_market_details',authMiddleware,checkRole(['admin']),async(req,res)=>{
+    const {email} = req.body
+    // console.log(email)
+    try {
+
+        const user = await MarketModel.find({email})
+        console.log(user)
+        if(user.length>0){
+            res.status(400).send({err:"market already exists"})
+
+        }else{
+            const kharidiDetails =await new MarketModel(req.body)
+             
+            await kharidiDetails.save()
+    
+            res.status(200).send({msg:"market updated successfully..."})
+        }
+        
+    } catch (error) {
+        res.status(400).send({err:error.message})
+        
+    }
+})
+
+AdminRoute.put('/update_shetkari_details',authMiddleware,checkRole(['admin']),async(req,res)=>{
+    const id = "64f5ba430012de0737db9e0d"
+    try {
+        const kharidiDetails =await FromShetkariModel.findByIdAndUpdate(id,req.body)
+        
+        if(!kharidiDetails){
+            res.status(400).send({err:"wrong process..."})
+
+        }else{
+
+            res.status(200).send({msg:"shetkari updated successfully..."})
+        }
+
+        
+    } catch (error) {
+        res.status(400).send({err:error.message})
+        
+    }
+})
+
+AdminRoute.put('/update_kharidi_details',authMiddleware,checkRole(['admin']),async(req,res)=>{
+    const id="64f5b4c86bfec3a18fab8eb2"
+    try {
+        const shetkariDetails =await FromShetkariModel.findByIdAndUpdate(id,req.body)
+        
+        // const updatedKharidi = await kharidiDetails.save()
+
+        if(!shetkariDetails){
+            res.status(400).send({err:"wrong process..."})
+
+        }else{
+
+            res.status(200).send({msg:"shetkari updated successfully..."})
+        }
+        
+    } catch (error) {
+        res.status(400).send({err:error.message})
+        
+    }
+})
 
 
 module.exports=AdminRoute

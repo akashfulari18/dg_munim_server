@@ -3,7 +3,7 @@ require('dotenv').config()
 
 const checkInvoieID=async(req,res,next)=>{
 
-    const invoiceToken = req.headers.authorization.split(' ')[3] || ""
+    const invoiceToken = req.headers.authorization.split(' ')[3] || ' '
 
     try {
         const decoded =  jwt.verify(invoiceToken,process.env.PRIVATE_KEY)
