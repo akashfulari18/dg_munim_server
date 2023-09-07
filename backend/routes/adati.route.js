@@ -10,23 +10,24 @@ const FromShetkariModel = require('../model/shetkariEntry.model')
 const ShetkariModel = require('../model/shetkariEntry.model')
 const MarketModel = require('../model/market.model')
 const ProductDetailsModel = require('../model/productDetails.model')
+const calculateTotalQuantity = require('../utils')
 require('dotenv').config()
 
 const adatiRoute = express.Router()
 
 adatiRoute.post('/post_form_data', authMiddleware, checkRole(['adati']), async (req, res) => {
     const { bill_no } = req
-    const {shetkari_mobile_no,shetkaryache_nav,adati_ID,    } = req.body
+    const { shetkari_mobile_no, shetkaryache_nav, adati_ID, } = req.body
 
-    const query ={
-       $or:[
-        {shetkari_mobile_no:shetkari_mobile_no},
-        {shetkaryache_nav:shetkaryache_nav}
-       ]
+    const query = {
+        $or: [
+            { shetkari_mobile_no: shetkari_mobile_no },
+            { shetkaryache_nav: shetkaryache_nav }
+        ]
     }
     try {
 
-        
+
         // const user = await UserModel.findOne({_id:req.body.userID})
         const user = await InvoiceModel.find({ bill_no })
         // const shetkari = await ShetkariModel.find(query)
@@ -51,22 +52,22 @@ adatiRoute.post('/post_form_data', authMiddleware, checkRole(['adati']), async (
             console.log(req.body)
 
             const newShetkari = {
-                           
+
 
             }
 
 
             // store shetkari
 
-            const shetkari_details= await new ShetkariModel()
-           
+            const shetkari_details = await new ShetkariModel()
+
             const newInvoice = await new InvoiceModel({ ...req.body, entry_date: formattedDate })
             const savedInvoice = await newInvoice.save()
 
             // console.log(savedInvoice)
             // const invoiceToken = jwt.sign({ invoiceId: savedInvoice._id ,bill_no: savedInvoice.bill_no }, process.env.PRIVATE_KEY)
             // res.status(200).send({ msg: "invoice saved sucessfully...", invoiceToken})
-            res.status(200).send({ msg: "invoice saved sucessfully...",bill_no, })
+            res.status(200).send({ msg: "invoice saved sucessfully...", bill_no, })
 
 
         }
@@ -199,9 +200,9 @@ adatiRoute.get('/genrate_invoice', authMiddleware, checkRole(['adati']), checkIn
 });
 
 
-adatiRoute.post("/post_product_data",authMiddleware,checkRole(['adati']),async(req,res)=>{
+adatiRoute.post("/post_product_data", authMiddleware, checkRole(['adati']), async (req, res) => {
 
-    const {bill_no , shetkaryache_nav,patti_no,mobile_no}=req.body
+    const { bill_no, shetkaryache_nav, patti_no, mobile_no } = req.body
 
     const currentDate = new Date();
 
@@ -215,61 +216,97 @@ adatiRoute.post("/post_product_data",authMiddleware,checkRole(['adati']),async(r
         hour12: true,
     }).format(currentDate);
 
-   console.log(req.body)
+    console.log(req.body)
     try {
 
-            const new_shetkari =await new ProductDetailsModel({shetkaryache_products_details:[
-                {...req.body,entry_date:formattedDate}
-            ]})
-            //    console.log(shetkari)
-            await new_shetkari.save()
-           res.status(200).send(new_shetkari)
+        const new_shetkari = await new ProductDetailsModel({
+            shetkaryache_products_details: [
+                { ...req.body, entry_date: formattedDate }
+            ]
+        })
+        //    console.log(shetkari)
+        await new_shetkari.save()
+        res.status(200).send(new_shetkari)
         //    }
-           
-        } catch (error) {
-        res.status(200).send({err:error.message})
-        
+
+    } catch (error) {
+        res.status(200).send({ err: error.message })
+
     }
 })
 
-adatiRoute.post("/update_product_data/:shetkari_ID",authMiddleware,checkRole(['adati']),async(req,res)=>{
+adatiRoute.patch("/update_shetkari_product_data/:shetkari_ID", authMiddleware, checkRole(['adati']), async (req, res) => {
 
-    const {shetkari_ID} = req.params
+    const { shetkari_ID } = req.params
+
+
 
     try {
         const productDetails = await ProductDetailsModel.findOne({
             'shetkaryache_products_details.shetkari_ID': shetkari_ID,
-          })
-          res.status(200).send(productDetails)
-        } catch (error) {
-        res.status(200).send({err:error.message})
-        
+        })
+
+        if (!productDetails) {
+            res.status(400).send("user product not found...")
+        } else {
+
+            // const shetkariEntry = productDetails.shetkaryache_products_details.find(
+            //     (entry) => entry.shetkari_ID === shetkari_ID
+            //   )
+            productDetails.shetkaryache_products_details.push(req.body)
+            const updatedProduct = await productDetails.save()
+            res.status(200).send(updatedProduct)
+        }
+
+    } catch (error) {
+        res.status(200).send({ err: error.message })
+
     }
 })
+
+adatiRoute.get("/genrate_invoice/")
+
+
+
 // update the stocks 
 
-adatiRoute.patch("/update_adati_stocks/:adati_ID",authMiddleware,checkRole(['adati']),async(req,res)=>{
-    const {adati_ID} = req.params
+adatiRoute.patch("/update_adati_stocks/:adati_ID", authMiddleware, checkRole(['adati']), async (req, res) => {
+    const { adati_ID } = req.params
     // console.log(adati_ID)
 
     try {
-        const adati = await UserModel.findOne({_id:adati_ID})
 
-        if(!adati){
-            res.status(400).send({err:"adati does not exist"})
-        }else{
+        const productDetails = await ProductDetailsModel.findOne({
+            'shetkaryache_products_details.adati_ID': adati_ID,
+        })
 
-            const updated_adati = await UserModel.findByIdAndUpdate(adati_ID,req.body)
-            
-            res.status(200).send({msg:"adati stock updated successfully..."})
+        const adati = await UserModel.findById(adati_ID)
 
+        if (!productDetails) {
+            res.status(400).send({ err: "adati does not exist" })
+        } else {
+            const response = calculateTotalQuantity(productDetails)
+
+            for (const malacha_prakar in response) {
+                const totalQuantity = response[malacha_prakar];
+
+                adati.stocks.forEach((stock) => {
+                    if (stock.malacha_prakar === malacha_prakar) {
+                        stock.set('quantity_in_qunintal', totalQuantity);
+                    }
+                });
+               
+            }
+            const resp = await adati.save()
+            // res.status(200).send({msg:"adati stock updated successfully..."})
+
+            res.status(200).send(resp)
 
         }
-    
-        // res.status(200).send({adati_ID})
+
     } catch (error) {
-        res.status(400).send({err:error.message})
-        
+        res.status(400).send({ err: error.message })
+
     }
 
 })
@@ -277,55 +314,55 @@ adatiRoute.patch("/update_adati_stocks/:adati_ID",authMiddleware,checkRole(['ada
 
 // market  Route
 adatiRoute.get("/get_price_details", authMiddleware, checkRole(['adati']), async (req, res) => {
-    const  {market_name}=req.body
- let m_name= market_name.toLowerCase()
-     try {
- 
-         const market_rates = await MarketModel.findOne({ market_name:m_name })
-      
- 
-         res.status(200).send({ market_rates })
-     } catch (error) {
- 
-         res.status(400).send({ err: error.message })
-     }
- })
+    const { market_name } = req.body
+    let m_name = market_name.toLowerCase()
+    try {
+
+        const market_rates = await MarketModel.findOne({ market_name: m_name })
+
+
+        res.status(200).send({ market_rates })
+    } catch (error) {
+
+        res.status(400).send({ err: error.message })
+    }
+})
 
 
 //  add shetkari
 
-adatiRoute.post("/add_shetkari",authMiddleware,checkRole(['adati']),async(req,res)=>{
-         const {mobile_no} = req.body
-// console.log(mobile_no)
-         try {
-            
-           const shetkari = await ShetkariModel.find({mobile_no})
-           
-           if(shetkari.length>0){
-              res.status(400).send("shetkari already exist...!")
-            }else{
-                
+adatiRoute.post("/add_shetkari", authMiddleware, checkRole(['adati']), async (req, res) => {
+    const { mobile_no } = req.body
+    // console.log(mobile_no)
+    try {
+
+        const shetkari = await ShetkariModel.find({ mobile_no })
+
+        if (shetkari.length > 0) {
+            res.status(400).send("shetkari already exist...!")
+        } else {
+
             const newShetkari = await new ShetkariModel(req.body)
-            const savedShetkari= await newShetkari.save()
+            const savedShetkari = await newShetkari.save()
 
-                res.status(200).send({msg:"shetkari added successfully...",savedShetkari})
-           
-            }
-            
-            
-        } catch (error) {
-             res.status(400).send({err:error.message})
-         }
-    })
+            res.status(200).send({ msg: "shetkari added successfully...", savedShetkari })
 
-adatiRoute.get("/get_shetkari_data",authMiddleware,checkRole(['adati']),async(req,res)=>{
+        }
+
+
+    } catch (error) {
+        res.status(400).send({ err: error.message })
+    }
+})
+
+adatiRoute.get("/get_shetkari_data", authMiddleware, checkRole(['adati']), async (req, res) => {
 
     try {
         const all_shetkari = await ShetkariModel.find()
         res.status(200).send(all_shetkari)
     } catch (error) {
-        res.status(400).send({err:error.message})
-        
+        res.status(400).send({ err: error.message })
+
     }
 })
 
