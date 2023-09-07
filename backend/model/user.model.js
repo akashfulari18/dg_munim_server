@@ -8,7 +8,7 @@ const userSchema = mongoose.Schema({
     mobile_no:{type:Number,required:true},
     username: { type: String, required: true, unique: true },
     market_name:{type:String},
-    gala_no:{type:Number},
+    gala_no:{type:String},
     role: {
         type: String,
         enum: ['admin', 'kharidi', 'adati','shetkari'],

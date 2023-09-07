@@ -281,6 +281,12 @@ adatiRoute.get("/get_price_details", authMiddleware, checkRole(['adati']), async
      }
  })
 
+
+//  add shetkari
+
+adatiRoute.post("/add_shetkari",authMiddleware,checkRole(['adati']),async(req,res)=>{
+         const {} = req.body
+    })
 module.exports = adatiRoute
 
 

@@ -10,7 +10,7 @@ const UserRoute = express.Router()
 UserRoute.post('/login', async (req, res) => {
 
     const { username, password } = req.body
-    const refreshTokens = []
+
 
     // console.log(username)
     try {
@@ -28,9 +28,18 @@ UserRoute.post('/login', async (req, res) => {
 
                 const refreshToken = jwt.sign({ userId: user._id, role: user.role }, process.env.REFRESH_TOKEN_KEY,{expiresIn:'7d'})
                
-                refreshTokens.push(refreshToken);
-
-                res.status(200).send({ msg: "login successful", accessToken ,refreshToken ,role:user.role ,adati_ID:user._id })
+                const userData={
+                    role:user.role,
+                    adati_ID:user._id,
+                    firstname:user.firstname,
+                    lastname:user.lastname,
+                    username:user.username,
+                    mobile_no:user.movile_no,
+                    gala_no:user.gala_no,
+                    market_name:user.gala_no
+                }
+                
+                res.status(200).send({ msg: "login successful", accessToken ,refreshToken ,userData})
 
             } else {
 
