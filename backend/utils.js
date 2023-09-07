@@ -8,4 +8,6 @@ const generatePassword = async (username) => {
     return { plainPassword: password, hashedPassword };
   };
 
+ 
+
   module.exports={generatePassword}

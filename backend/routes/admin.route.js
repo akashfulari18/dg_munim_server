@@ -7,7 +7,7 @@ const UserModel = require('../model/user.model')
 const authMiddleware = require('../middleware/auth.middleware')
 const { checkRole } = require('../middleware/checkRole.middleware')
 const FromKharidiModel = require('../model/fromKharidi.model')
-const FromShetkariModel = require('../model/fromShetkari.model')
+const FromShetkariModel = require('../model/shetkariEntry.model')
 const MarketModel = require('../model/market.model')
 const { generatePassword } = require('../utils')
 
@@ -42,12 +42,13 @@ AdminRoute.post("/signup",async(req,res)=>{
 
 AdminRoute.post("/add_user",authMiddleware,checkRole(['admin']),async(req,res)=>{
 
-    const {role,email,password,username} = req.body
+    const {role,email,username,password} = req.body
 
-    const {plainPassword, hashedPassword} = await generatePassword(username)
+    // const {plainPassword, hashedPassword} = await generatePassword(username)
 //    console.log(plainPassword,hashedPassword)
-    try {  
-            const user = await UserModel.find({email})
+// console.log(email)
+try {  
+    const user = await UserModel.find({email})
 
             if(user.length>0){
                 res.status(400).send({err:"user already exists"})
@@ -55,14 +56,15 @@ AdminRoute.post("/add_user",authMiddleware,checkRole(['admin']),async(req,res)=>
                 const hashedPass = await bcrypt.hash(password,6)
                 // console.log(hashedPass)
                 
+                // const newUser =  new UserModel({...req.body,password:hashedPassword})
                 const newUser =  new UserModel({...req.body,password:hashedPass})
-                // await newUser.save()
-                res.status(200).send({msg:"user added successfully..."})
+                await newUser.save()
+                res.status(200).send({msg:"user added successfully...",plainPassword})
 
             }
         
     } catch (error) {
-        res.status(404).send({err:error.message})
+        res.status(404).send({err1:error.message})
         
     }
 })
@@ -109,10 +111,20 @@ AdminRoute.get("/get_single_user/:id",authMiddleware,checkRole(['admin']),async(
 })
 AdminRoute.patch("/update_user/:id", authMiddleware, checkRole(['admin']), async (req, res) => {
     const { id } = req.params; // Extract the ID from params as a string
-    
+    const {password} = req.body
   
     try {
-      const user = await UserModel.findByIdAndUpdate(id, req.body); // Use id as a string directly
+        let user
+        if(password){
+            const hashedPass = await bcrypt.hash(password,6)
+                // console.log(hashedPass)
+                
+                // const newUser =  new UserModel({...req.body,password:hashedPassword})
+                 user =  await UserModel.findByIdAndUpdate(id,{...req.body,password:hashedPass})
+        }else{
+
+             user = await UserModel.findByIdAndUpdate(id, req.body); // Use id as a string directly
+        }
   
       if (!user) {
         // const updated_user = await UserModel.find({ _id: id }); // Use id as a string directly
@@ -148,29 +160,7 @@ AdminRoute.delete("/inactive_user/:id",authMiddleware,checkRole(['admin']),async
  }
 })
 
-AdminRoute.post('/add_market_details',authMiddleware,checkRole(['admin']),async(req,res)=>{
-    const {email} = req.body
-    // console.log(email)
-    try {
 
-        const user = await MarketModel.find({email})
-        console.log(user)
-        if(user.length>0){
-            res.status(400).send({err:"market already exists"})
-
-        }else{
-            const kharidiDetails =await new MarketModel(req.body)
-             
-            await kharidiDetails.save()
-    
-            res.status(200).send({msg:"market updated successfully..."})
-        }
-        
-    } catch (error) {
-        res.status(400).send({err:error.message})
-        
-    }
-})
 
 AdminRoute.put('/update_shetkari_details',authMiddleware,checkRole(['admin']),async(req,res)=>{
     const id = "64f5ba430012de0737db9e0d"
@@ -213,5 +203,57 @@ AdminRoute.put('/update_kharidi_details',authMiddleware,checkRole(['admin']),asy
     }
 })
 
+// Market Routes
+
+AdminRoute.post('/add_market_details',authMiddleware,checkRole(['admin']),async(req,res)=>{
+    let {market_name} = req.body
+    market_name=market_name.toLowerCase()
+    // console.log(email)
+    try {
+
+        const user = await MarketModel.find({market_name})
+        // console.log(user)
+        if(user.length>0){
+            res.status(400).send({err:"market already exists"})
+
+        }else{
+            const kharidiDetails =await new MarketModel(req.body)
+             
+            await kharidiDetails.save()
+    
+            res.status(200).send({msg:"market updated successfully..."})
+        }
+        
+    } catch (error) {
+        res.status(400).send({err:error.message})
+        
+    }
+})
+
+AdminRoute.patch("/update_market_details", authMiddleware, checkRole(['admin']), async (req, res) => {
+    let {market_name} =req.body
+    
+    
+    let m_name = market_name.toLowerCase()
+
+    // console.log(market_name)
+    try {
+        const market  = await MarketModel.findOne({market_name:m_name})
+        // console.log(market)
+        if(!market){
+            res.status(400).send({err:"market not existed."})
+        }else{
+
+            const market_rate = await MarketModel.findByIdAndUpdate(market._id,{...req.body,market_name:m_name})
+
+            res.status(200).send({msg:"market rate updated successfully..." })
+        }
+    
+
+    } catch (error) {
+
+        res.status(400).send({ err: error.message })
+    }
+})
 
 module.exports=AdminRoute

@@ -6,7 +6,8 @@ const invoiceSchema = mongoose.Schema({
     vikretyache_nav: { type: String, required: true },//विक्रेत्याचे_नाव
     kharedidarache_nav: { type: String },//खरेदीदाराचे_नाव
     shetkaryache_nav: { type: String, required: true },//शेतकऱ्याचे_नाव
-    chitti_no: { type: Number, required: true, unique: true },//चिठ्ठी_नंबर
+    shetkari_mobile_no:{type:String,required:true},
+    chitti_no: { type: Number, unique: true },//चिठ्ठी_नंबर
     patti_no: { type: Number, required: true, unique: true },//पट्टी_नंबर
     katevala_no: { type: Number, required: true },//काटेवाला_नंबर
     haste: { type: String, required: true },//हस्ते
