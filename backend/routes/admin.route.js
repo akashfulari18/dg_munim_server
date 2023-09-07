@@ -84,9 +84,17 @@ AdminRoute.post("/add_user", authMiddleware, checkRole(['admin']), async (req, r
             // console.log(hashedPass)
 
             // const newUser =  new UserModel({...req.body,password:hashedPassword})
-            const newUser = new UserModel({ ...req.body, password: hashedPass ,stocks })
-            await newUser.save()
-            res.status(200).send({ msg: "user added successfully..." })
+            if(user.role==='adati'){
+
+                const newUser = new UserModel({ ...req.body, password: hashedPass ,stocks })
+                await newUser.save()
+                res.status(200).send({ msg: "user added successfully..." })
+            }else{
+                const newUser = new UserModel({ ...req.body, password: hashedPass })
+                await newUser.save()
+                res.status(200).send({ msg: "user added successfully..." })
+
+            }
 
         }
 

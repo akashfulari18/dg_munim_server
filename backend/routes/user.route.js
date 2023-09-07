@@ -30,7 +30,6 @@ UserRoute.post('/login', async (req, res) => {
                
                 const userData={
                     role:user.role,
-                    adati_ID:user._id,
                     firstname:user.firstname,
                     lastname:user.lastname,
                     username:user.username,
@@ -38,6 +37,14 @@ UserRoute.post('/login', async (req, res) => {
                     gala_no:user.gala_no,
                     market_name:user.gala_no
                 }
+
+                if (user.role === 'adati') {
+                    userData.adati_ID = user._id; // Replace with the adati ID or value you want to include
+                  } else if (user.role === 'kharidi') {
+                    userData.kharidi_ID = user._id; // Replace with the kharidi ID or value you want to include
+                  } else if (user.role === 'admin') {
+                    userData.admin_ID = user._id; // Replace with the admin ID or value you want to include
+                  }
                 
                 res.status(200).send({ msg: "login successful", accessToken ,refreshToken ,userData})
 

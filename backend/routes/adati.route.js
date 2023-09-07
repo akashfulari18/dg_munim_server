@@ -307,6 +307,19 @@ adatiRoute.post("/add_shetkari",authMiddleware,checkRole(['adati']),async(req,re
              res.status(400).send({err:error.message})
          }
     })
+
+adatiRoute.get("/get_shetkari_data",authMiddleware,checkRole(['adati']),async(req,res)=>{
+
+    try {
+        const all_shetkari = await ShetkariModel.find()
+        res.status(200).send(all_shetkari)
+    } catch (error) {
+        res.status(400).send({err:error.message})
+        
+    }
+})
+
+
 module.exports = adatiRoute
 
 
