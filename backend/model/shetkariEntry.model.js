@@ -1,9 +1,9 @@
 const mongoose = require('mongoose')
 
 const shetkariEntrySchema = mongoose.Schema({
-    fistname:{ type: String},
+    firstname:{ type: String},
     lastname:{ type: String},
-    username:{type:String, required: true, unique: true },
+    username:{type:String, required: true },
     mobile_no: { type: Number, required: true, unique: true },
 })
 

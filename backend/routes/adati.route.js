@@ -199,9 +199,6 @@ adatiRoute.get('/genrate_invoice', authMiddleware, checkRole(['adati']), checkIn
 });
 
 
-
-
-
 adatiRoute.post("/post_product_data",authMiddleware,checkRole(['adati']),async(req,res)=>{
 
     const {bill_no , shetkaryache_nav,patti_no,mobile_no}=req.body
@@ -221,17 +218,29 @@ adatiRoute.post("/post_product_data",authMiddleware,checkRole(['adati']),async(r
    console.log(req.body)
     try {
 
-           const shetkari =  await  ShetkariModel.find({mobile_no})
-           if(shetkari.length>0){
-              res.status(400).send({err:"shetkari does not exists"})
-           }else{
-           
-            const new_shetkari =await new ProductDetailsModel({...req.body,entry_date:formattedDate})
+            const new_shetkari =await new ProductDetailsModel({shetkaryache_products_details:[
+                {...req.body,entry_date:formattedDate}
+            ]})
             //    console.log(shetkari)
             await new_shetkari.save()
            res.status(200).send(new_shetkari)
-           }
+        //    }
            
+        } catch (error) {
+        res.status(200).send({err:error.message})
+        
+    }
+})
+
+adatiRoute.post("/update_product_data/:shetkari_ID",authMiddleware,checkRole(['adati']),async(req,res)=>{
+
+    const {shetkari_ID} = req.params
+
+    try {
+        const productDetails = await ProductDetailsModel.findOne({
+            'shetkaryache_products_details.shetkari_ID': shetkari_ID,
+          })
+          res.status(200).send(productDetails)
         } catch (error) {
         res.status(200).send({err:error.message})
         
@@ -297,9 +306,10 @@ adatiRoute.post("/add_shetkari",authMiddleware,checkRole(['adati']),async(req,re
             }else{
                 
             const newShetkari = await new ShetkariModel(req.body)
-           const savedShetkari= await newShetkari.save()
+            const savedShetkari= await newShetkari.save()
 
-                res.status(200).send("shetkari added successfully...",savedShetkari)
+                res.status(200).send({msg:"shetkari added successfully...",savedShetkari})
+           
             }
             
             

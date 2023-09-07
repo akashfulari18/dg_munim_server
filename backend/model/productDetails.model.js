@@ -20,9 +20,9 @@ const productDetailsSchema= mongoose.Schema({
                     dar_prati_quintal_rupaye: { type: Number },
                     aakar: { type: Number, },
                     isSold: { type: Boolean },
+                    exit_date: Date
                 },
             ],
-            exit_date: Date
         },
     ]
 })
