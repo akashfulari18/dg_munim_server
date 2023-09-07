@@ -9,6 +9,7 @@ const FromKharidiModel = require('../model/fromKharidi.model')
 const FromShetkariModel = require('../model/shetkariEntry.model')
 const ShetkariModel = require('../model/shetkariEntry.model')
 const MarketModel = require('../model/market.model')
+const ProductDetailsModel = require('../model/productDetails.model')
 require('dotenv').config()
 
 const adatiRoute = express.Router()
@@ -224,8 +225,8 @@ adatiRoute.post("/post_product_data",authMiddleware,checkRole(['adati']),async(r
            if(shetkari.length>0){
               res.status(400).send({err:"shetkari does not exists"})
            }else{
-
-            const new_shetkari =await new ShetkariModel({...req.body,entry_date:formattedDate})
+           
+            const new_shetkari =await new ProductDetailsModel({...req.body,entry_date:formattedDate})
             //    console.log(shetkari)
             await new_shetkari.save()
            res.status(200).send(new_shetkari)
@@ -285,7 +286,26 @@ adatiRoute.get("/get_price_details", authMiddleware, checkRole(['adati']), async
 //  add shetkari
 
 adatiRoute.post("/add_shetkari",authMiddleware,checkRole(['adati']),async(req,res)=>{
-         const {} = req.body
+         const {mobile_no} = req.body
+// console.log(mobile_no)
+         try {
+            
+           const shetkari = await ShetkariModel.find({mobile_no})
+           
+           if(shetkari.length>0){
+              res.status(400).send("shetkari already exist...!")
+            }else{
+                
+            const newShetkari = await new ShetkariModel(req.body)
+           const savedShetkari= await newShetkari.save()
+
+                res.status(200).send("shetkari added successfully...",savedShetkari)
+            }
+            
+            
+        } catch (error) {
+             res.status(400).send({err:error.message})
+         }
     })
 module.exports = adatiRoute
 

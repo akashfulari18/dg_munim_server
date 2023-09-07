@@ -91,7 +91,7 @@ AdminRoute.post("/add_user", authMiddleware, checkRole(['admin']), async (req, r
         }
 
     } catch (error) {
-        res.status(404).send({ err1: error.message })
+        res.status(404).send({ err: error.message })
 
     }
 })

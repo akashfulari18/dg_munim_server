@@ -5,7 +5,6 @@ const shetkariEntrySchema = mongoose.Schema({
     lastname:{ type: String},
     username:{type:String, required: true, unique: true },
     mobile_no: { type: Number, required: true, unique: true },
-
 })
 
 const ShetkariModel = mongoose.model('shetkari', shetkariEntrySchema)
