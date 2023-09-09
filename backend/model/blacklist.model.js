@@ -1,6 +1,6 @@
 const mongoose = require("mongoose")
 
-const backlistSchema=  mongoose.Schema({
+const blacklistSchema=  mongoose.Schema({
            refreshToken: {
           type: String,
           required: true
@@ -8,7 +8,7 @@ const backlistSchema=  mongoose.Schema({
       
 })
 
-const BlacklistModel = mongoose.model("baclistedtoken",backlistSchema)
+const BlacklistModel = mongoose.model("blacklistedtoken",blacklistSchema)
 
 module.exports={
     BlacklistModel

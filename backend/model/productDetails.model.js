@@ -1,14 +1,16 @@
-const mongoose = require('mongoose') 
+const mongoose = require('mongoose')
+const { shetkariEntrySchema, shetkariSchemaType } = require('./shetkariEntry.model')
 
-const productDetailsSchema= mongoose.Schema({
-    shetkaryache_products_details: [
-        {
+const productDetailsSchema = mongoose.Schema({
+    // shetkaryache_products_details: [
+        // {
             adati_ID: String,
-            shetkari_ID:String,
+            shetkari: shetkariSchemaType,
             entry_date: Date,//if there will be a case like same farmer is adding new product then for that we should be creating array 
-            patti_no: { type: Number, required: true, unique: true },
             arr_malacha_tapshil: [
                 {
+                    patti_no: { type: Number,  unique: true },
+                    chitti_no: { type: Number, unique:true},
                     malacha_prakar: { type: String, required: true },
                     nag: { type: Number, required: true },
                     vajan_malacha_tapshil: {
@@ -23,10 +25,10 @@ const productDetailsSchema= mongoose.Schema({
                     exit_date: Date
                 },
             ],
-        },
-    ]
+        // },
+    // ]
 })
 
-const ProductDetailsModel = mongoose.model("product_detail",productDetailsSchema)
+const ProductDetailsModel = mongoose.model("product_detail", productDetailsSchema)
 
-module.exports=ProductDetailsModel
+module.exports = ProductDetailsModel

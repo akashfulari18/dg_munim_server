@@ -5,9 +5,9 @@ const UserModel = require('../model/user.model')
 const jwt = require('jsonwebtoken')
 const InvoiceModel = require('../model/invoice.model')
 const checkInvoieID = require('../middleware/invoice.middleware')
-const FromKharidiModel = require('../model/fromKharidi.model')
+const FromKharidiModel = require('../model/transactions.model')
 const FromShetkariModel = require('../model/shetkariEntry.model')
-const ShetkariModel = require('../model/shetkariEntry.model')
+const {ShetkariModel} = require('../model/shetkariEntry.model')
 const MarketModel = require('../model/market.model')
 const ProductDetailsModel = require('../model/productDetails.model')
 const calculateTotalQuantity = require('../utils')
@@ -201,68 +201,122 @@ adatiRoute.get('/genrate_invoice', authMiddleware, checkRole(['adati']), checkIn
 
 
 adatiRoute.post("/post_product_data", authMiddleware, checkRole(['adati']), async (req, res) => {
-
-    const { bill_no, shetkaryache_nav, patti_no, mobile_no } = req.body
-
-    const currentDate = new Date();
-
-    // Format the date with date, time, and AM/PM indicator
-    const formattedDate = new Intl.DateTimeFormat('en-US', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-    }).format(currentDate);
-
-    console.log(req.body)
     try {
-
-        const new_shetkari = await new ProductDetailsModel({
-            shetkaryache_products_details: [
-                { ...req.body, entry_date: formattedDate }
-            ]
-        })
-        //    console.log(shetkari)
-        await new_shetkari.save()
-        res.status(200).send(new_shetkari)
-        //    }
-
+      const { shetkari_ID } = req.body;
+  
+      // Modify req.body to add default values
+      function addDefaultValues(body) {
+        body.arr_malacha_tapshil.forEach(item => {
+          item.patti_no = 0;
+          item.chitti_no = 0;
+        });
+      }
+  
+      addDefaultValues(req.body);
+  
+      console.log(req.body);
+  
+    
+        // Create a new entry if it doesn't exist
+        const new_shetkari = await new ProductDetailsModel( req.body);
+        await new_shetkari.save();
+        res.status(201).send(new_shetkari); // Respond with status 201 for resource creation
+     
     } catch (error) {
-        res.status(200).send({ err: error.message })
+      res.status(500).send({ error: error.message }); // Handle error and respond with an appropriate status code
+    }
+  });
+  
 
+// adatiRoute.patch("/add_new_product_data_to_old_product/:shetkari_ID", authMiddleware, checkRole(['adati']), async (req, res) => {
+
+//     const { shetkari_ID } = req.params
+
+//     try {
+
+//         const productDetails = await ProductDetailsModel.findOne({
+//             'shetkaryache_products_details.shetkari_ID': shetkari_ID,
+//         })
+
+//         if (!productDetails) {
+//             res.status(400).send("user product not found...")
+//         } else {
+
+            
+//             productDetails.shetkaryache_products_details.push(req.body)
+
+//             const updatedProduct = await productDetails.save()
+//             res.status(200).send(updatedProduct)
+//         }
+
+//     } catch (error) {
+//         res.status(200).send({ err: error.message })
+        
+//     }
+// })
+
+adatiRoute.get("/get_product_data",authMiddleware,checkRole(['adati']),async(req,res)=>{
+    try {
+        const product_list = await ProductDetailsModel.find()
+
+
+        res.status(200).send(product_list)
+    } catch (error) {
+        res.status(200).send({err:error.message})
+        
     }
 })
+adatiRoute.patch("/add_new_product_data_to_old_product/:shetkari_ID/:product_ID", authMiddleware, checkRole(['adati']), async (req, res) => {
 
-adatiRoute.patch("/update_shetkari_product_data/:shetkari_ID", authMiddleware, checkRole(['adati']), async (req, res) => {
-
-    const { shetkari_ID } = req.params
-
-
+    const { shetkari_ID , product_ID} = req.params
 
     try {
+
         const productDetails = await ProductDetailsModel.findOne({
             'shetkaryache_products_details.shetkari_ID': shetkari_ID,
+            'shetkaryache_products_details.arr_malacha_tapshil._id': productID 
         })
 
         if (!productDetails) {
             res.status(400).send("user product not found...")
         } else {
 
-            // const shetkariEntry = productDetails.shetkaryache_products_details.find(
-            //     (entry) => entry.shetkari_ID === shetkari_ID
-            //   )
+            
             productDetails.shetkaryache_products_details.push(req.body)
+
             const updatedProduct = await productDetails.save()
             res.status(200).send(updatedProduct)
         }
 
     } catch (error) {
         res.status(200).send({ err: error.message })
-
+        
     }
 })
+
+adatiRoute.get("/get_shetkari_product_data/:shetkari_ID",authMiddleware, checkRole(['adati']),async(req,res)=>{
+    const {shetkari_ID } = req.params
+
+    try {
+        
+        const productDetails = await ProductDetailsModel.findOne({
+            'shetkaryache_products_details.shetkari_ID': shetkari_ID,
+        })
+
+        if (!productDetails) {
+            res.status(400).send("user product not found...")
+        } else {       
+
+            // const updatedProduct = await productDetails.save()
+            res.status(200).send(productDetails)
+        }
+        
+    } catch (error) {
+        res.status(200).send({ err: error.message })
+        
+    }
+})
+
 
 adatiRoute.get("/genrate_invoice/")
 

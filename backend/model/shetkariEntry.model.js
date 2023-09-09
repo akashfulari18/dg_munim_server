@@ -8,4 +8,6 @@ const shetkariEntrySchema = mongoose.Schema({
 
 const ShetkariModel = mongoose.model('shetkari', shetkariEntrySchema)
 
-module.exports = ShetkariModel
+const shetkariSchemaType=shetkariEntrySchema.tree
+
+module.exports = {ShetkariModel,shetkariEntrySchema,shetkariSchemaType}
